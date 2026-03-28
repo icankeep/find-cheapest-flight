@@ -17,12 +17,40 @@
 
 ## 安装和使用
 
+### 前置依赖
+#### 1. 安装 Chrome DevTools MCP 服务
+本工具依赖 Chrome DevTools MCP (Model Context Protocol) 服务实现浏览器自动化。
+
+**安装方法：**
+1. 安装 Node.js >= 18
+2. 安装 MCP 服务：
+   ```bash
+   npm install -g @modelcontextprotocol/server-chrome-devtools
+   ```
+3. 配置到你的 Claude Code `settings.json`：
+   ```json
+   "mcpServers": {
+     "chrome-devtools": {
+       "command": "npx",
+       "args": ["@modelcontextprotocol/server-chrome-devtools"]
+     }
+   }
+   ```
+   重启 Claude Code 即可加载 MCP 服务。
+
+#### 2. 安装 Skill 到 Claude Code
+将本项目复制到 Claude Code 的 skills 目录：
+```bash
+git clone https://github.com/icankeep/find-cheapest-flight.git ~/.claude/skills/
+```
+
 ### 系统要求
 - Chrome/Chromium 浏览器
-- Chrome DevTools MCP 服务
+- Node.js >= 18 (用于 MCP 服务)
 - Python 3.10+
 
 ### 使用方法
+在 Claude Code 聊天框中直接输入命令：
 ```bash
 /find-cheapest-flight <出发城市> <到达城市> <日期>
 ```
