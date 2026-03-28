@@ -55,9 +55,10 @@ Run these Chrome MCP steps:
 3. **Wait for results:**
    Call `wait_for` with a 10-second delay to allow the flight results to load.
 
-4. **Find the batchSearch response:**
-   Call `list_network_requests`. Look for a request whose URL contains `batchSearch`.
+4. **Find the flight search response:**
+   Call `list_network_requests`. Look for a request whose URL contains `batchSearch` or `FlightListSearchSSE` (trip.com uses either depending on region/version).
    Call `get_network_request` with that request's ID to retrieve the full response body.
+   The response must contain `data.flightItineraryList` — if it doesn't, try the next matching request.
 
 5. **Save the response to a temp file:**
    Use the Bash tool to write the response body to `/tmp/flight_direct.json`.
@@ -91,7 +92,7 @@ For **each** onward city (repeat for all four):
 
 2. **Wait** 8 seconds for results to load.
 
-3. **Capture response** with `list_network_requests` + `get_network_request` (same as Step 2).
+3. **Capture response** with `list_network_requests` + `get_network_request` (same as Step 2 — look for `batchSearch` or `FlightListSearchSSE`).
 
 4. **Save and parse:**
    ```bash
