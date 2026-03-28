@@ -9,7 +9,6 @@ Prints JSON array of flight records to stdout.
 Use --format human to print the human-readable table instead.
 """
 import json
-import sys
 import argparse
 
 
@@ -60,13 +59,10 @@ def parse_flights(data: dict, target: str, search_type: str) -> list:
 
         # For hidden city: target must appear as an intermediate arrival (not the final leg)
         intermediate_arrivals = [leg["to_code"] for leg in legs[:-1]]
-        is_hidden_city_candidate = target in intermediate_arrivals
+        is_hidden_city = search_type == "hidden" and target in intermediate_arrivals
 
-        if search_type == "hidden" and not is_hidden_city_candidate:
+        if search_type == "hidden" and not is_hidden_city:
             continue
-
-        # Only mark as hidden city when explicitly searching for hidden city tickets
-        is_hidden_city = search_type == "hidden" and is_hidden_city_candidate
 
         flights.append({
             "price": price,
@@ -147,4 +143,6 @@ if __name__ == "__main__":
     if args.format == "json":
         print(json.dumps(flights, ensure_ascii=False, indent=2))
     else:
-        print(format_results(flights, [], args.origin, args.destination, args.date))
+        direct = flights if args.search_type == "direct" else []
+        hidden = flights if args.search_type == "hidden" else []
+        print(format_results(direct, hidden, args.origin, args.destination, args.date))
