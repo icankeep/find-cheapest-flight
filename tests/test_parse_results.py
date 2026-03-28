@@ -111,5 +111,31 @@ class TestFormatResults(unittest.TestCase):
         self.assertIn("2600", self.output)
 
 
+class TestSSEParsing(unittest.TestCase):
+    """Verify that SSE-format responses (data: prefix) are parsed correctly."""
+
+    def test_load_response_sse_format(self):
+        path = os.path.join(FIXTURES, "sample_direct_sse.txt")
+        data = parse_results.load_response(path)
+        self.assertIn("itineraryList", data)
+        self.assertEqual(len(data["itineraryList"]), 2)
+
+    def test_parse_flights_from_sse(self):
+        path = os.path.join(FIXTURES, "sample_direct_sse.txt")
+        data = parse_results.load_response(path)
+        flights = parse_results.parse_flights(data, target="PEK", search_type="direct")
+        self.assertEqual(len(flights), 2)
+        self.assertEqual(flights[0]["price"], 2900)  # MU557 is cheaper
+
+    def test_load_response_plain_json(self):
+        path = os.path.join(FIXTURES, "sample_direct.json")
+        data = parse_results.load_response(path)
+        # Legacy fixture uses flightItineraryList inside data{}
+        itineraries = (data.get("data", {}).get("flightItineraryList")
+                       or data.get("data", {}).get("itineraryList")
+                       or data.get("itineraryList", []))
+        self.assertEqual(len(itineraries), 3)
+
+
 if __name__ == "__main__":
     unittest.main()

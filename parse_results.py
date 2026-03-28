@@ -1,5 +1,5 @@
 """
-parse_results.py — Parse trip.com batchSearch JSON response into formatted flight list.
+parse_results.py — Parse trip.com FlightListSearchSSE response into formatted flight list.
 
 Usage:
     python3 parse_results.py --response /tmp/flight.json --target PEK --type direct
@@ -7,17 +7,44 @@ Usage:
 
 Prints JSON array of flight records to stdout.
 Use --format human to print the human-readable table instead.
+
+Supports both SSE format (data: prefix lines) and plain JSON.
+Supports both the current API structure (itineraryList / journeyList / transSectionList)
+and the legacy structure (flightItineraryList / flightSegments / flightList).
 """
 import json
 import argparse
 
 
+def load_response(path: str) -> dict:
+    """Load trip.com response — handles both plain JSON and SSE (data: prefix) format."""
+    with open(path) as f:
+        raw = f.read()
+    lines = [l for l in raw.splitlines() if l.strip()]
+    sse_lines = [l[len("data:"):].strip() for l in lines if l.startswith("data:")]
+    if sse_lines:
+        # Use the last SSE chunk that contains flight data (final complete result set)
+        for chunk_text in reversed(sse_lines):
+            if not chunk_text:
+                continue
+            try:
+                chunk = json.loads(chunk_text)
+                if (chunk.get("itineraryList")
+                        or chunk.get("data", {}).get("itineraryList")
+                        or chunk.get("data", {}).get("flightItineraryList")):
+                    return chunk
+            except json.JSONDecodeError:
+                continue
+        return {}
+    return json.loads(raw)
+
+
 def parse_flights(data: dict, target: str, search_type: str) -> list:
     """
-    Parse batchSearch response dict into a sorted list of flight records.
+    Parse trip.com API response dict into a sorted list of flight records.
 
     Args:
-        data:        Parsed JSON from batchSearch API response.
+        data:        Parsed JSON from FlightListSearchSSE or batchSearch API response.
         target:      IATA airport code of the real destination (e.g. "PEK").
         search_type: "direct" — return all itineraries (no filtering).
                      "hidden" — return only itineraries where `target` is
@@ -26,36 +53,58 @@ def parse_flights(data: dict, target: str, search_type: str) -> list:
     Returns:
         List of flight record dicts, sorted by price ascending.
     """
+    # Support both current API (top-level itineraryList) and legacy/fixture structure
     itineraries = (
-        data.get("data", {}).get("flightItineraryList", [])
+        data.get("itineraryList")                            # current API (2026)
+        or data.get("data", {}).get("itineraryList")         # current API wrapped in data{}
+        or data.get("data", {}).get("flightItineraryList")   # legacy structure (fixtures)
+        or []
     )
     flights = []
 
     for itinerary in itineraries:
+        # Price: current API uses policies[0].price.totalPrice; legacy uses priceList[0].adultPrice
+        policies = itinerary.get("policies", [])
         price_list = itinerary.get("priceList", [])
-        if not price_list:
-            continue
-        price = price_list[0].get("adultPrice", 0)
-
-        segments = itinerary.get("flightSegments", [])
-        if not segments:
-            continue
-
-        raw_legs = segments[0].get("flightList", [])
-        if not raw_legs:
+        if policies:
+            price = policies[0].get("price", {}).get("totalPrice", 0)
+        elif price_list:
+            price = price_list[0].get("adultPrice", 0)
+        else:
             continue
 
-        legs = [
-            {
-                "flight_no": leg.get("flightNo", ""),
-                "airline": leg.get("marketAirlineName", ""),
-                "from_code": leg.get("departureCityCode", ""),
-                "to_code": leg.get("arrivalCityCode", ""),
-                "departure": leg.get("departureDateTime", ""),
-                "arrival": leg.get("arrivalDateTime", ""),
-            }
-            for leg in raw_legs
-        ]
+        # Legs: current API uses journeyList[0].transSectionList; legacy uses flightSegments[0].flightList
+        journey = itinerary.get("journeyList", [{}])[0]
+        trans_sections = journey.get("transSectionList", [])
+        flight_segments = itinerary.get("flightSegments", [{}])
+        raw_legs_old = flight_segments[0].get("flightList", []) if flight_segments else []
+
+        if trans_sections:
+            legs = [
+                {
+                    "flight_no": sec.get("flightInfo", {}).get("flightNo", ""),
+                    "airline": sec.get("flightInfo", {}).get("airlineName", ""),
+                    "from_code": sec.get("departPoint", {}).get("airportCode", ""),
+                    "to_code": sec.get("arrivePoint", {}).get("airportCode", ""),
+                    "departure": sec.get("departDateTime", ""),
+                    "arrival": sec.get("arriveDateTime", ""),
+                }
+                for sec in trans_sections
+            ]
+        elif raw_legs_old:
+            legs = [
+                {
+                    "flight_no": leg.get("flightNo", ""),
+                    "airline": leg.get("marketAirlineName", ""),
+                    "from_code": leg.get("departureCityCode", ""),
+                    "to_code": leg.get("arrivalCityCode", ""),
+                    "departure": leg.get("departureDateTime", ""),
+                    "arrival": leg.get("arrivalDateTime", ""),
+                }
+                for leg in raw_legs_old
+            ]
+        else:
+            continue
 
         # For hidden city: target must appear as an intermediate arrival (not the final leg)
         intermediate_arrivals = [leg["to_code"] for leg in legs[:-1]]
@@ -125,7 +174,7 @@ def format_results(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--response", required=True, help="Path to batchSearch JSON response file")
+    parser.add_argument("--response", required=True, help="Path to FlightListSearchSSE response file")
     parser.add_argument("--target", required=True, help="Target airport IATA code, e.g. PEK")
     parser.add_argument("--type", dest="search_type", default="direct",
                         choices=["direct", "hidden"])
@@ -135,8 +184,7 @@ if __name__ == "__main__":
     parser.add_argument("--date", default="")
     args = parser.parse_args()
 
-    with open(args.response) as f:
-        data = json.load(f)
+    data = load_response(args.response)
 
     flights = parse_flights(data, target=args.target, search_type=args.search_type)
 
