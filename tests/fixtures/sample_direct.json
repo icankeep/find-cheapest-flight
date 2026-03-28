@@ -1,0 +1,44 @@
+{
+  "data": {
+    "flightItineraryList": [
+      {
+        "priceList": [{"adultPrice": 3200}],
+        "flightSegments": [{
+          "flightList": [
+            {
+              "flightNo": "AF129",
+              "marketAirlineName": "Air France",
+              "departureCityCode": "CDG",
+              "arrivalCityCode": "PEK",
+              "departureDateTime": "2026-05-21 09:30",
+              "arrivalDateTime": "2026-05-22 06:00"
+            }
+          ]
+        }]
+      },
+      {
+        "priceList": [{"adultPrice": 2900}],
+        "flightSegments": [{
+          "flightList": [
+            {
+              "flightNo": "MU557",
+              "marketAirlineName": "China Eastern",
+              "departureCityCode": "CDG",
+              "arrivalCityCode": "PVG",
+              "departureDateTime": "2026-05-21 10:00",
+              "arrivalDateTime": "2026-05-22 05:30"
+            },
+            {
+              "flightNo": "MU5117",
+              "marketAirlineName": "China Eastern",
+              "departureCityCode": "PVG",
+              "arrivalCityCode": "PEK",
+              "departureDateTime": "2026-05-22 07:00",
+              "arrivalDateTime": "2026-05-22 09:15"
+            }
+          ]
+        }]
+      }
+    ]
+  }
+}

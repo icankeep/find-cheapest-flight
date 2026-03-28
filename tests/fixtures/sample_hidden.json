@@ -1,0 +1,44 @@
+{
+  "data": {
+    "flightItineraryList": [
+      {
+        "priceList": [{"adultPrice": 2600}],
+        "flightSegments": [{
+          "flightList": [
+            {
+              "flightNo": "CA856",
+              "marketAirlineName": "Air China",
+              "departureCityCode": "CDG",
+              "arrivalCityCode": "PEK",
+              "departureDateTime": "2026-05-21 13:45",
+              "arrivalDateTime": "2026-05-22 08:00"
+            },
+            {
+              "flightNo": "CA1515",
+              "marketAirlineName": "Air China",
+              "departureCityCode": "PEK",
+              "arrivalCityCode": "PVG",
+              "departureDateTime": "2026-05-22 10:30",
+              "arrivalDateTime": "2026-05-22 12:45"
+            }
+          ]
+        }]
+      },
+      {
+        "priceList": [{"adultPrice": 3100}],
+        "flightSegments": [{
+          "flightList": [
+            {
+              "flightNo": "MU001",
+              "marketAirlineName": "China Eastern",
+              "departureCityCode": "CDG",
+              "arrivalCityCode": "PVG",
+              "departureDateTime": "2026-05-21 11:00",
+              "arrivalDateTime": "2026-05-22 06:30"
+            }
+          ]
+        }]
+      }
+    ]
+  }
+}
