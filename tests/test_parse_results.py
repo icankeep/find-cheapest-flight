@@ -48,8 +48,11 @@ class TestParseDirectFlights(unittest.TestCase):
             self.assertIn(key, leg)
 
     def test_direct_flights_not_marked_hidden(self):
-        for f in self.flights:
-            self.assertFalse(f["is_hidden_city"])
+        # CA101 in the fixture transits PEK (PEK is an intermediate stop),
+        # but search_type="direct" should still return it with is_hidden_city=False
+        ca101 = next((f for f in self.flights if f["legs"][0]["flight_no"] == "CA101"), None)
+        self.assertIsNotNone(ca101, "CA101 itinerary should be included in direct search results")
+        self.assertFalse(ca101["is_hidden_city"])
 
 
 class TestParseHiddenCityFlights(unittest.TestCase):

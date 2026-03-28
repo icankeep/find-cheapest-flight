@@ -38,6 +38,29 @@
             }
           ]
         }]
+      },
+      {
+        "priceList": [{"adultPrice": 3500}],
+        "flightSegments": [{
+          "flightList": [
+            {
+              "flightNo": "CA101",
+              "marketAirlineName": "Air China",
+              "departureCityCode": "CDG",
+              "arrivalCityCode": "PEK",
+              "departureDateTime": "2026-05-21 14:00",
+              "arrivalDateTime": "2026-05-22 09:30"
+            },
+            {
+              "flightNo": "CA1237",
+              "marketAirlineName": "Air China",
+              "departureCityCode": "PEK",
+              "arrivalCityCode": "SHA",
+              "departureDateTime": "2026-05-22 12:00",
+              "arrivalDateTime": "2026-05-22 14:15"
+            }
+          ]
+        }]
       }
     ]
   }
